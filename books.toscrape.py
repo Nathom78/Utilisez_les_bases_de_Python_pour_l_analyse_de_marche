@@ -3,81 +3,99 @@ from bs4 import BeautifulSoup
 import csv
 
 
-# récupère les titres ou descriptions comme liste de strings
-def extraire_donnees(elements):
-    resultat = []
-    for element in elements:
-        resultat.append(element.string)
-    return resultat
-
-
-# charger la donnée dans un fichier csv
-def charger_donnees(nom_fichier, en_tete, titres, descriptions):
-    with open(nom_fichier, 'w') as fichier_csv:
+# charger les données dans un fichier csv
+def save_data(nom_fichier, en_tete, list_data):
+    with open(nom_fichier, 'w', newline='') as fichier_csv:
         writer = csv.writer(fichier_csv, delimiter=',')
         writer.writerow(en_tete)
-        # zip permet d'itérer sur deux listes à la fois
-        for titre, description in zip(titres, descriptions):
-            writer.writerow([titre, description])
+        writer.writerow(list_data)
 
 
-def etl(url_product):
-    # lien de la page à scrapper
-    reponse = requests.get(url_product)
-    page = reponse.content
-
-    # transforme (parse) le HTML en objet BeautifulSoup
-    soup = BeautifulSoup(page, "html.parser")
-
-    # récupération des données du tableau de la page
-    table = soup.find_all("tr")
-    case = []
-    for ligne in table:
-        case.append(ligne.td.string)
-
-    # récupération product_page_url
-    product_page_url = url_product
-
-    # récupération universal_product_code (upc)
-    universal_product_code = case[0]
-
-    # récupération title
-    title = soup.find("content_inner > article > div.row > div.col-sm-6.product_main")
-    print(title)
-    # content_inner > article > div.row > div.col-sm-6.product_main
-
-    # récupération price_including_tax
-    price_including_tax = case[3]
-
-    # récupération price_excluding_tax
-    price_excluding_tax = case[2]
-
-    # récupération number_available
-    number_available = int(''.join(filter(str.isdigit, case[5])))
-
-    # récupération product_description
-    product_description = soup.find("article").p
-    print(product_description)
-
-    # récupération category
-    # récupération review_rating
-    # récupération image_url
-
-    # récupération de tous les titres
-
-    # récupération de toutes les descriptions
-    # descriptions = soup.find_all("p", class_="gem-c-document-list__item-description")
-
-    en_tete = ["product_page_url", "universal_product_code (upc)", "title",
-               "price_including_tax", "price_excluding_tax", "number_available",
-               "product_description", "category", "review_rating", "image_url", "image"]
-
-    # titres = extraire_donnees(titres)
-    # descriptions = extraire_donnees(descriptions)
-    # charger_donnees("Data/data.csv", en_tete, product_page_url, universal_product_code, title,
-    #                price_including_tax, price_excluding_tax, number_available,
-    #                product_description, category, review_rating, image_url, image)
+# sauvegarder l'image
+def transfert_image(url_img, file_name):
+    # Send GET request
+    response = requests.get(url_img)
+    # Save the image
+    if response.status_code == 200:
+        with open(file_name, "wb") as f:
+            f.write(response.content)
+    else:
+        print(response.status_code)
 
 
+#  Extraire les données de la page HTML d’un seul produit
+def scrap_article(url_book):
+    # lien de la page produit à scrapper
+    reponse = requests.get(url_book)
+    if reponse.status_code == 200:
+        page = reponse.content
+        # transforme (parse) le HTML en objet BeautifulSoup
+        soup = BeautifulSoup(page, "html.parser")
+
+        # récupération des données du tableau de la page
+        table = soup.find_all("tr")
+        case = []
+        for ligne in table:
+            case.append(ligne.td.string)
+
+        # récupération product_page_url
+        product_page_url = url_book
+
+        # récupération universal_product_code (upc)
+        universal_product_code = case[0]
+
+        # récupération title
+        title = soup.find("div", class_="col-sm-6 product_main").h1.string
+
+        # récupération price_including_tax
+        price_including_tax = case[3]
+
+        # récupération price_excluding_tax
+        price_excluding_tax = case[2]
+
+        # récupération number_available
+        number_available = int(''.join(filter(str.isdigit, case[5])))
+
+        # récupération product_description
+        product_description = soup.find(id="product_description").find_next_sibling("p").string
+
+        # récupération category
+        breadcrumbs = soup.find(class_="breadcrumb")
+        breadcrumb = breadcrumbs.find_all("li")
+        puce_link = []
+        for ligne in breadcrumb:
+            puce_link.append(ligne.get_text(strip=True))
+        category = puce_link[2]
+
+        # récupération review_rating
+        p_stars = soup.find(class_="star-rating").attrs
+        review_rating = p_stars["class"][1]
+
+        # récupération image_url
+        image_url_tmp = soup.find('img')['src']
+        image_url = image_url_tmp.replace('../..', "http://books.toscrape.com")
+
+        # ligne head du tableau
+        en_tete = ["product_page_url", "universal_product_code (upc)", "title",
+                   "price_including_tax", "price_excluding_tax", "number_available",
+                   "product_description", "category", "review_rating", "image_url"]
+
+        # liste de la ligne des données
+        data = [product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax,
+                number_available, product_description, category, review_rating, image_url]
+
+        title_reformat = title.translate({ord(c): "_" for c in " !@#$%^&*()[]{};:,./<>?|`~-=_+"})
+        # nom du fichier
+        file_data_name = "Data/" + category + "/" + "book_" + title_reformat + ".csv"
+        # nom du fichier image
+        file_img_name = "Data/" + category + "/" + "book_img_" + title_reformat + ".jpg"
+
+        save_data(file_data_name, en_tete, data)
+        transfert_image(image_url, file_img_name)
+    else:
+        print("Url de l'article unreadable")
+
+
+# url de l'article
 url = "http://books.toscrape.com/catalogue/sapiens-a-brief-history-of-humankind_996/index.html"
-etl(url)
+scrap_article(url)
