@@ -15,10 +15,10 @@ def get_last_digit(str1):
 
 
 # charger les données dans un fichier csv
-def save_data(nom_category, en_tete, list_data):
+def save_data(name_category, list_header, list_data):
     # nom du fichier
-    file_data_name = "Data/" + nom_category + "/" + nom_category + "_book_" + time.strftime("%Y%m%d") + ".csv"
-    dir_path = "Data/" + nom_category + "/"
+    file_data_name = "Data/" + name_category + "/" + name_category + "_book_" + time.strftime("%Y%m%d") + ".csv"
+    dir_path = "Data/" + name_category + "/"
     # création du repertoire si besoin
     os.makedirs(dir_path, exist_ok=True)
 
@@ -34,7 +34,7 @@ def save_data(nom_category, en_tete, list_data):
     if if_exist == 0:
         with open(file_data_name, 'w', newline='') as fichier_csv:
             writer = csv.writer(fichier_csv, delimiter=',')
-            writer.writerow(en_tete)
+            writer.writerow(list_header)
             writer.writerow(list_data)
     else:
         with open(file_data_name, 'a', newline='') as fichier_csv:
@@ -116,7 +116,7 @@ def scrap_article(url_book):
         image_url = image_url_tmp.replace('../..', "http://books.toscrape.com")
 
         # ligne head du tableau
-        en_tete = ["product_page_url", "universal_product_code (upc)", "title",
+        header = ["product_page_url", "universal_product_code (upc)", "title",
                    "price_including_tax", "price_excluding_tax", "number_available",
                    "product_description", "category", "review_rating", "image_url"]
 
@@ -129,7 +129,7 @@ def scrap_article(url_book):
         file_img_name = "Data/" + category + "/" + "book_img_" + title_reformat + ".jpg"
 
         # actions
-        save_data(category, en_tete, data)
+        save_data(category, header, data)
         transfert_image(image_url, file_img_name)
     else:
         print("Url de l'article inatteignable")
@@ -195,5 +195,10 @@ def scrap_category(url_category):
             break
 
 
-scrap_category("http://books.toscrape.com/catalogue/category/books/mystery_3/index.html")
+# scrap_category("http://books.toscrape.com/catalogue/category/books/mystery_3/index.html")
+
+# Extraire toutes les categories
+def scrap_all_categories():
+    print("C'est parti!!!")
+
 
