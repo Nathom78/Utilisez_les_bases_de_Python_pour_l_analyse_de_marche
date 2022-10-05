@@ -85,8 +85,9 @@ def scrap_article(url_book):
         universal_product_code = case[0]
 
         # récupération title
-        title = soup.find("div", class_="col-sm-6 product_main").h1.string
-
+        title = soup.find("div", class_="col-sm-6 product_main")
+        if title is not None:
+            title = title.h1.string
         # récupération price_including_tax
         price_including_tax = case[3]
 
@@ -97,7 +98,9 @@ def scrap_article(url_book):
         number_available = int(''.join(filter(str.isdigit, case[5])))
 
         # récupération product_description
-        product_description = soup.find(id="product_description").find_next_sibling("p").string
+        product_description = soup.find(id="product_description")
+        if product_description is not None:
+            product_description = product_description.find_next_sibling("p").string
 
         # récupération category
         breadcrumbs = soup.find(class_="breadcrumb")
@@ -108,8 +111,8 @@ def scrap_article(url_book):
         category = puce_link[2]
 
         # récupération review_rating
-        p_stars = soup.find(class_="star-rating").attrs
-        review_rating = p_stars["class"][1]
+        p_stars = soup.find(class_="star-rating")
+        review_rating = p_stars.attrs["class"][1]
 
         # récupération image_url
         image_url_tmp = soup.find('img')['src']
@@ -117,14 +120,14 @@ def scrap_article(url_book):
 
         # ligne head du tableau
         header = ["product_page_url", "universal_product_code (upc)", "title",
-                   "price_including_tax", "price_excluding_tax", "number_available",
-                   "product_description", "category", "review_rating", "image_url"]
+                  "price_including_tax", "price_excluding_tax", "number_available",
+                  "product_description", "category", "review_rating", "image_url"]
 
         # liste de la ligne des données
         data = [product_page_url, universal_product_code, title, price_including_tax, price_excluding_tax,
                 number_available, product_description, category, review_rating, image_url]
 
-        title_reformat = title.translate({ord(c): "_" for c in " !@#$%^&*()[]{};:,./<>?|`~-=_+"})
+        title_reformat = title.translate({ord(c): "_" for c in """ !'"@#$%^&*()[]{};:,./<>?|`~-=_+"""})
         # nom du fichier image
         file_img_name = "Data/" + category + "/" + "book_img_" + title_reformat + ".jpg"
 
@@ -142,7 +145,6 @@ def scrap_article(url_book):
 
 
 def scrap_category(url_category):
-
     url_category_racine = url_category.replace("index.html", "")
     i = 0
     n = 0
@@ -158,10 +160,12 @@ def scrap_category(url_category):
 
             # Test si fichier du jour déjà existant
             category = soup.select_one("#default > div > div > div > div > div.page-header.action > h1").text
+
             file_name = "Data/" + category + "/" + category + "_book_" + time.strftime("%Y%m%d") + ".csv"
             if i == 1:
+                print("Category: "+category)
                 if os.path.exists(file_name):
-                    print(" Fichier du jour déjà existant -> suppression")
+                    print(" Fichier du jour déjà existant :")
                     s = input("suppression O/N?")
                     if s == ('o' or 'O'):
                         os.remove(file_name)
@@ -169,10 +173,13 @@ def scrap_category(url_category):
                         return 0
 
             # récupération du nombre total de page
-            nombre_page_string = soup.find("li", class_="current").string
-            n = int(get_last_digit(nombre_page_string))
+            nombre_page_string = soup.find("li", class_="current")
+            if nombre_page_string is not None:
+                n = int(get_last_digit(nombre_page_string.string))
+            else:
+                n = 1
 
-            print("Extraction de la page "+str(i)+" sur "+str(n))
+            print("Extraction de la page " + str(i) + " sur " + str(n))
 
             # récupération des urls des livres
             all_books_h3 = soup.find_all("h3")
@@ -185,7 +192,7 @@ def scrap_category(url_category):
                 scrap_article(book_url)
 
             # url de la page suivante
-            url_category_next = "page-"+str(i+1)+".html"
+            url_category_next = "page-" + str(i + 1) + ".html"
             url_category = url_category_racine + url_category_next
 
         else:
@@ -200,5 +207,22 @@ def scrap_category(url_category):
 # Extraire toutes les categories
 def scrap_all_categories():
     print("C'est parti!!!")
+    url_site = "http://books.toscrape.com/index.html"
+    # lien de la page produit à scrapper
+    reponse = requests.get(url_site)
+    if reponse.status_code == 200:
+        page = reponse.content
+        # transforme (parse) le HTML en objet BeautifulSoup
+        soup = BeautifulSoup(page, "html.parser")
+        # recuperation des url des categories
+        all_category = soup.select('a[href*="catalogue/category/books/"]')
+        all_category_url = []
+        for a in all_category:
+            all_category_url.append("http://books.toscrape.com/"+a["href"])
+        # Boucle pour lancements des opérations pour les categories
+        for one_url_category in all_category_url:
+            scrap_category(one_url_category)
+    return print("\nC'est finis. Merci de votre patience.")
 
 
+scrap_all_categories()
