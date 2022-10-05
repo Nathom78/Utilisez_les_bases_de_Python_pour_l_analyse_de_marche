@@ -1,26 +1,66 @@
 import requests
+import time
+import os
 from bs4 import BeautifulSoup
 import csv
 
 
+def get_last_digit(str1):
+    c = ""
+    for i in str1:
+        if i.isdigit():
+            c = i
+
+    return c
+
+
 # charger les données dans un fichier csv
-def save_data(nom_fichier, en_tete, list_data):
-    with open(nom_fichier, 'w', newline='') as fichier_csv:
-        writer = csv.writer(fichier_csv, delimiter=',')
-        writer.writerow(en_tete)
-        writer.writerow(list_data)
+def save_data(nom_category, en_tete, list_data):
+    # nom du fichier
+    file_data_name = "Data/" + nom_category + "/" + nom_category + "_book_" + time.strftime("%Y%m%d") + ".csv"
+    dir_path = "Data/" + nom_category + "/"
+    # création du repertoire si besoin
+    os.makedirs(dir_path, exist_ok=True)
+
+    if_exist = 0
+    try:
+        with open(file_data_name):
+            if_exist = 1
+            pass
+    except IOError:
+        pass
+
+    # Savoir pour écrire l'entête ou ajouter
+    if if_exist == 0:
+        with open(file_data_name, 'w', newline='') as fichier_csv:
+            writer = csv.writer(fichier_csv, delimiter=',')
+            writer.writerow(en_tete)
+            writer.writerow(list_data)
+    else:
+        with open(file_data_name, 'a', newline='') as fichier_csv:
+            writer = csv.writer(fichier_csv, delimiter=',')
+            writer.writerow(list_data)
 
 
 # sauvegarder l'image
 def transfert_image(url_img, file_name):
-    # Send GET request
-    response = requests.get(url_img)
-    # Save the image
-    if response.status_code == 200:
-        with open(file_name, "wb") as f:
-            f.write(response.content)
-    else:
-        print(response.status_code)
+    if_exist = 0
+    try:
+        with open(file_name):
+            if_exist = 1
+            pass
+    except IOError:
+        pass
+    # si le fichier n'existe pas déjà
+    if if_exist == 0:
+        # GET request
+        response = requests.get(url_img)
+        # Enregistrer l'image
+        if response.status_code == 200:
+            with open(file_name, "wb") as f:
+                f.write(response.content)
+        else:
+            print(response.status_code)
 
 
 #  Extraire les données de la page HTML d’un seul produit
@@ -85,17 +125,75 @@ def scrap_article(url_book):
                 number_available, product_description, category, review_rating, image_url]
 
         title_reformat = title.translate({ord(c): "_" for c in " !@#$%^&*()[]{};:,./<>?|`~-=_+"})
-        # nom du fichier
-        file_data_name = "Data/" + category + "/" + "book_" + title_reformat + ".csv"
         # nom du fichier image
         file_img_name = "Data/" + category + "/" + "book_img_" + title_reformat + ".jpg"
 
-        save_data(file_data_name, en_tete, data)
+        # actions
+        save_data(category, en_tete, data)
         transfert_image(image_url, file_img_name)
     else:
-        print("Url de l'article unreadable")
+        print("Url de l'article inatteignable")
 
 
 # url de l'article
-url = "http://books.toscrape.com/catalogue/sapiens-a-brief-history-of-humankind_996/index.html"
-scrap_article(url)
+# url_product = "http://books.toscrape.com/catalogue/sapiens-a-brief-history-of-humankind_996/index.html"
+# scrap un livre
+# scrap_article(url_product)
+
+
+def scrap_category(url_category):
+
+    url_category_racine = url_category.replace("index.html", "")
+    i = 0
+    n = 0
+
+    while True:
+        i += 1
+        reponse = requests.get(url_category)
+
+        if reponse.status_code == 200:
+            page = reponse.content
+            # transforme (parse) le HTML en objet BeautifulSoup
+            soup = BeautifulSoup(page, "html.parser")
+
+            # Test si fichier du jour déjà existant
+            category = soup.select_one("#default > div > div > div > div > div.page-header.action > h1").text
+            file_name = "Data/" + category + "/" + category + "_book_" + time.strftime("%Y%m%d") + ".csv"
+            if i == 1:
+                if os.path.exists(file_name):
+                    print(" Fichier du jour déjà existant -> suppression")
+                    s = input("suppression O/N?")
+                    if s == ('o' or 'O'):
+                        os.remove(file_name)
+                    else:
+                        return 0
+
+            # récupération du nombre total de page
+            nombre_page_string = soup.find("li", class_="current").string
+            n = int(get_last_digit(nombre_page_string))
+
+            print("Extraction de la page "+str(i)+" sur "+str(n))
+
+            # récupération des urls des livres
+            all_books_h3 = soup.find_all("h3")
+            all_books_url = []
+            for book in all_books_h3:
+                all_books_url.append(book.a["href"].replace('../../..', "http://books.toscrape.com/catalogue"))
+
+            # Scrap all books
+            for book_url in all_books_url:
+                scrap_article(book_url)
+
+            # url de la page suivante
+            url_category_next = "page-"+str(i+1)+".html"
+            url_category = url_category_racine + url_category_next
+
+        else:
+            print("Url de la catégorie inatteignable")
+
+        if i >= n:
+            break
+
+
+scrap_category("http://books.toscrape.com/catalogue/category/books/mystery_3/index.html")
+
