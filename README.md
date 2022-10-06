@@ -5,8 +5,11 @@ Objectif:
 http://books.toscrape.com/
 
 Vous pouvez retrouver en pdf [les objectifs complets ici](http://course.oc-static.com/projects/Python+FR/P2+-+Utilisez+les+bases+de+Python+pour+l'analyse+de+march%C3%A9/Python_P2_FR_Requirements.pdf)
+### Prérequis
+* Python est bien installé sur votre ordinateur
+* Git installé (conseillé)
 
-# INSTALLATION ##
+# INSTALLATION ( pour windows ) ##
 
 Créer un dossier vide. Il contiendra le code complet du projet, ainsi que les données du site aspiré.
 
@@ -35,6 +38,13 @@ Résultat:
 Normalement une fois le clonage du projet réalisé, il y a un fichier *requirement.txt* à la racine
 Taper la commande suivante :
 <pre> pip install -r requirements.txt </pre>
+
+## 4. Execution du logiciel
+
+Il ne reste plus qu'à lancer le programme books.toscrape.py, toujours depuis le terminal, grace à la commande suivante :
+
+<pre> py books.toscrape.py </pre>
+
 
 ## Technologies
 [![My Skills](https://skillicons.dev/icons?i=python,html,git,github&theme=dark)](https://skillicons.dev)
