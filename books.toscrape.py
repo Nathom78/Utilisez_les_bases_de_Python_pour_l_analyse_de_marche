@@ -65,7 +65,7 @@ def transfert_image(url_img, file_name):
 
 #  Extraire les données de la page HTML d’un seul produit
 def scrap_article(url_book):
-    # lien de la page produit à scrapper
+    # lien de la page produit à scrapper, et ouverture de l'URL
     reponse = requests.get(url_book)
     if reponse.status_code == 200:
         page = reponse.content
@@ -148,10 +148,13 @@ def scrap_category(url_category):
     url_category_racine = url_category.replace("index.html", "")
     i = 0
     n = 0
+    url_page_x_category = url_category
 
+    # boucle en fonction du nombre de pages, qui va être déterminé.
     while True:
         i += 1
-        reponse = requests.get(url_category)
+        # lien de la page_x de la catégorie à scrapper, et ouverture de l'URL
+        reponse = requests.get(url_page_x_category)
 
         if reponse.status_code == 200:
             page = reponse.content
@@ -163,7 +166,7 @@ def scrap_category(url_category):
 
             file_name = "Data/" + category + "/" + category + "_book_" + time.strftime("%Y%m%d") + ".csv"
             if i == 1:
-                print("Category: "+category)
+                print("Category: " + category)
                 if os.path.exists(file_name):
                     print(" Fichier du jour déjà existant :")
                     s = input("suppression O/N?")
@@ -193,7 +196,7 @@ def scrap_category(url_category):
 
             # url de la page suivante
             url_category_next = "page-" + str(i + 1) + ".html"
-            url_category = url_category_racine + url_category_next
+            url_page_x_category = url_category_racine + url_category_next
 
         else:
             print("Url de la catégorie inatteignable")
@@ -218,7 +221,7 @@ def scrap_all_categories():
         all_category = soup.select('a[href*="catalogue/category/books/"]')
         all_category_url = []
         for a in all_category:
-            all_category_url.append("http://books.toscrape.com/"+a["href"])
+            all_category_url.append("http://books.toscrape.com/" + a["href"])
         # Boucle pour lancements des opérations pour les categories
         for one_url_category in all_category_url:
             scrap_category(one_url_category)
