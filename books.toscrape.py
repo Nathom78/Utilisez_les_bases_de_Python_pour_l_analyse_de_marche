@@ -205,26 +205,29 @@ def scrap_category(url_category):
             break
 
 
-# scrap_category("http://books.toscrape.com/catalogue/category/books/mystery_3/index.html")
-
 # Extraire toutes les categories
 def scrap_all_categories():
     print("C'est parti!!!")
+
     url_site = "http://books.toscrape.com/index.html"
-    # lien de la page produit à scrapper
+
+    # lien de la page accueil du site à scrapper et ouverture de l'URL
     reponse = requests.get(url_site)
     if reponse.status_code == 200:
         page = reponse.content
         # transforme (parse) le HTML en objet BeautifulSoup
         soup = BeautifulSoup(page, "html.parser")
+
         # recuperation des url des categories
         all_category = soup.select('a[href*="catalogue/category/books/"]')
         all_category_url = []
         for a in all_category:
             all_category_url.append("http://books.toscrape.com/" + a["href"])
+
         # Boucle pour lancements des opérations pour les categories
         for one_url_category in all_category_url:
             scrap_category(one_url_category)
+
     return print("\nC'est finis. Merci de votre patience.")
 
 
