@@ -33,7 +33,7 @@ python -m venv env
 Et la commande suivante, pour activer l'environnement :
 <pre><code> source env/bin/activate</code></pre>
 Résultat:
-<pre> (env) "chemin de votre répertoire crée"> </pre>
+><pre> (env) "chemin de votre répertoire crée"> </pre>
 
 ## 3. Installer les paquets nécessaires aux projets 
 
@@ -43,15 +43,15 @@ Taper la commande suivante :
 Pour vérifier, taper cette commande :
 <pre><code>pip list</code></pre>
 Et vous devriez avoir :
->><pre><code>beautifulsoup4     4.11.1
->>certifi            2022.9.24
->>charset-normalizer 2.1.1
->>idna               3.4
->>pip                22.2.2
->>requests           2.28.1
->>setuptools         65.3.0
->>soupsieve          2.3.2.post1
->>urllib3            1.26.12</code></pre>
+><pre><code>beautifulsoup4     4.11.1
+>certifi            2022.9.24
+>charset-normalizer 2.1.1
+>idna               3.4
+>pip                22.2.2
+>requests           2.28.1
+>setuptools         65.3.0
+>soupsieve          2.3.2.post1
+>urllib3            1.26.12</code></pre>
 ## 4. Execution du logiciel
 
 Il ne reste plus qu'à lancer le programme books.toscrape.py, toujours depuis le terminal, grâce à la commande suivante :
