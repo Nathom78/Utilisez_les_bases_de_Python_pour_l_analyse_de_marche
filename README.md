@@ -26,9 +26,11 @@ Ou utiliser [ce repository](https://github.com/Nathom78/Utilisez_les_bases_de_Py
 ## 2. Créer et activer l'environnement virtuel
 
 Dans le terminal, toujours à la **racine du projet** :<br>
-Tapez la commande suivante, afin de créer un environnement dans le repertoire env:
-<pre><code> python -m venv env </code></pre>
-Et la commande suivante, pour activer l'environnement:
+Tapez la commande suivante, afin de créer un environnement dans le repertoire env :
+```PowerShell 
+python -m venv env 
+```
+Et la commande suivante, pour activer l'environnement :
 <pre><code> source env/bin/activate</code></pre>
 Résultat:
 <pre> (env) "chemin de votre répertoire crée"> </pre>

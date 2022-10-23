@@ -1,7 +1,7 @@
 import requests
+from bs4 import BeautifulSoup
 import time
 import os
-from bs4 import BeautifulSoup
 import csv
 
 
